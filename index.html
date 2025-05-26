@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>名前当てルーレットゲーム</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 800px;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .controls {
+            margin-bottom: 30px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .mode-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .mode-btn.active {
+            background: rgba(255, 255, 255, 0.8);
+            color: #333;
+        }
+
+        .mode-btn:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        input[type="text"] {
+            padding: 12px;
+            border: none;
+            border-radius: 25px;
+            width: 200px;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .add-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            background: #4CAF50;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .add-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .roulette-container {
+            position: relative;
+            margin: 30px auto;
+            width: 400px;
+            height: 400px;
+        }
+
+        .roulette {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 8px solid #fff;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+        }
+
+        .roulette-section {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+            transition: all 0.3s ease;
+        }
+
+        .roulette-section:hover {
+            filter: brightness(1.2);
+        }
+
+        .pointer {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 30px solid #ff4757;
+            z-index: 10;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+        }
+
+        .spin-btn {
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+            margin: 20px;
+        }
+
+        .spin-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.6);
+        }
+
+        .spin-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .names-list {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .name-tag {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .name-tag.selected {
+            background: #4CAF50;
+            animation: pulse 0.6s ease;
+        }
+
+        .remove-btn {
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            color: white;
+            font-size: 12px;
+        }
+
+        .result {
+            margin-top: 20px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .winner {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes glow {
+            from { filter: drop-shadow(0 0 5px #FFD700); }
+            to { filter: drop-shadow(0 0 20px #FFD700); }
+        }
+
+        @keyframes confetti {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #FFD700;
+            animation: confetti 2s ease-out;
+        }
+
+        @media (max-width: 600px) {
+            .roulette-container {
+                width: 300px;
+                height: 300px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            input[type="text"] {
+                width: 180px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 名前当てルーレット</h1>
+        
+        <div class="controls">
+            <div class="mode-selector">
+                <span>モード:</span>
+                <button class="mode-btn active" data-mode="single">一回のみ</button>
+                <button class="mode-btn" data-mode="multiple">複数選択</button>
+            </div>
+            
+            <input type="text" id="nameInput" placeholder="名前を入力してください" maxlength="10">
+            <button class="add-btn" onclick="addName()">追加</button>
+        </div>
+
+        <div class="roulette-container">
+            <div class="pointer"></div>
+            <div class="roulette" id="roulette"></div>
+        </div>
+
+        <button class="spin-btn" id="spinBtn" onclick="spinRoulette()">ルーレットを回す！</button>
+
+        <div class="result" id="result"></div>
+
+        <div class="names-list" id="namesList"></div>
+    </div>
+
+    <script>
+        let names = [];
+        let selectedNames = [];
+        let isSpinning = false;
+        let currentMode = 'single';
+        let spinCount = 0;
+
+        const colors = [
+            '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57',
+            '#FF9FF3', '#54A0FF', '#5F27CD', '#00D2D3', '#FF9F43',
+            '#10AC84', '#EE5A52', '#0ABDE3', '#C44569', '#F8B500'
+        ];
+
+        // モード切り替え
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentMode = this.dataset.mode;
+                updateResult();
+            });
+        });
+
+        // Enterキーで名前追加
+        document.getElementById('nameInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addName();
+            }
+        });
+
+        function addName() {
+            const input = document.getElementById('nameInput');
+            const name = input.value.trim();
+            
+            if (name && !names.includes(name)) {
+                names.push(name);
+                input.value = '';
+                updateRoulette();
+                updateNamesList();
+                updateSpinButton();
+            }
+        }
+
+        function removeName(name) {
+            names = names.filter(n => n !== name);
+            selectedNames = selectedNames.filter(n => n !== name);
+            updateRoulette();
+            updateNamesList();
+            updateSpinButton();
+            updateResult();
+        }
+
+        function updateRoulette() {
+            const roulette = document.getElementById('roulette');
+            roulette.innerHTML = '';
+            
+            if (names.length === 0) return;
+            
+            // SVGで円グラフを作成
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', '100%');
+            svg.setAttribute('height', '100%');
+            svg.style.transform = 'rotate(-90deg)'; // 12時方向から開始
+            
+            const radius = 180;
+            const centerX = 192;
+            const centerY = 192;
+            let currentAngle = 0;
+            
+            names.forEach((name, index) => {
+                const angle = 360 / names.length;
+                const startAngle = currentAngle;
+                const endAngle = currentAngle + angle;
+                
+                // 扇形のパスを作成
+                const startRadians = (startAngle * Math.PI) / 180;
+                const endRadians = (endAngle * Math.PI) / 180;
+                
+                const x1 = centerX + radius * Math.cos(startRadians);
+                const y1 = centerY + radius * Math.sin(startRadians);
+                const x2 = centerX + radius * Math.cos(endRadians);
+                const y2 = centerY + radius * Math.sin(endRadians);
+                
+                const largeArcFlag = angle > 180 ? 1 : 0;
+                
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`);
+                path.setAttribute('fill', colors[index % colors.length]);
+                path.setAttribute('stroke', '#fff');
+                path.setAttribute('stroke-width', '2');
+                
+                svg.appendChild(path);
+                
+                // テキストを追加
+                const textAngle = startAngle + angle / 2;
+                const textRadius = radius * 0.7;
+                const textX = centerX + textRadius * Math.cos((textAngle * Math.PI) / 180);
+                const textY = centerY + textRadius * Math.sin((textAngle * Math.PI) / 180);
+                
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', textX);
+                text.setAttribute('y', textY);
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('dominant-baseline', 'middle');
+                text.setAttribute('fill', 'white');
+                text.setAttribute('font-weight', 'bold');
+                text.setAttribute('font-size', names.length > 8 ? '12' : '14');
+                text.setAttribute('transform', `rotate(${textAngle + 90} ${textX} ${textY})`);
+                text.style.textShadow = '1px 1px 2px rgba(0,0,0,0.7)';
+                text.textContent = name;
+                
+                svg.appendChild(text);
+                
+                currentAngle = endAngle;
+            });
+            
+            roulette.appendChild(svg);
+        }
+
+        function updateNamesList() {
+            const namesList = document.getElementById('namesList');
+            namesList.innerHTML = '';
+            
+            names.forEach(name => {
+                const nameTag = document.createElement('div');
+                nameTag.className = `name-tag ${selectedNames.includes(name) ? 'selected' : ''}`;
+                nameTag.innerHTML = `
+                    <span>${name}</span>
+                    <button class="remove-btn" onclick="removeName('${name}')">×</button>
+                `;
+                namesList.appendChild(nameTag);
+            });
+        }
+
+        function updateSpinButton() {
+            const spinBtn = document.getElementById('spinBtn');
+            const availableNames = currentMode === 'single' ? 
+                names.filter(name => !selectedNames.includes(name)) : names;
+            
+            spinBtn.disabled = availableNames.length === 0;
+            
+            if (currentMode === 'single' && selectedNames.length > 0) {
+                spinBtn.textContent = `残り${availableNames.length}人`;
+            } else {
+                spinBtn.textContent = 'ルーレットを回す！';
+            }
+        }
+
+        function updateResult() {
+            const result = document.getElementById('result');
+            if (selectedNames.length === 0) {
+                result.innerHTML = '';
+                return;
+            }
+
+            if (currentMode === 'single') {
+                result.innerHTML = `<span class="winner">🎉 ${selectedNames[selectedNames.length - 1]} さん！</span>`;
+            } else {
+                result.innerHTML = `<span class="winner">🎉 選ばれた人: ${selectedNames.join(', ')} さん！</span>`;
+            }
+        }
+
+        function spinRoulette() {
+            if (isSpinning || names.length === 0) return;
+            
+            const availableNames = currentMode === 'single' ? 
+                names.filter(name => !selectedNames.includes(name)) : names;
+                
+            if (availableNames.length === 0) return;
+            
+            isSpinning = true;
+            document.getElementById('spinBtn').disabled = true;
+            
+            const roulette = document.getElementById('roulette');
+            const randomIndex = Math.floor(Math.random() * availableNames.length);
+            const selectedName = availableNames[randomIndex];
+            
+            // 選択された名前のインデックスを全体の名前リストから取得
+            const actualIndex = names.indexOf(selectedName);
+            const anglePerSection = 360 / names.length;
+            const targetAngle = actualIndex * anglePerSection;
+            
+            // 複数回転 + 目標角度
+            const totalRotation = 360 * (3 + Math.random() * 3) + (360 - targetAngle);
+            
+            roulette.style.transform = `rotate(${totalRotation}deg)`;
+            
+            setTimeout(() => {
+                selectedNames.push(selectedName);
+                updateNamesList();
+                updateSpinButton();
+                updateResult();
+                createConfetti();
+                isSpinning = false;
+            }, 4000);
+        }
+
+        function createConfetti() {
+            const container = document.querySelector('.container');
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + '%';
+                    confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                    container.appendChild(confetti);
+                    
+                    setTimeout(() => {
+                        confetti.remove();
+                    }, 2000);
+                }, i * 20);
+            }
+        }
+
+        // 初期化
+        updateRoulette();
+        updateNamesList();
+        updateSpinButton();
+    </script>
+</body>
+</html>
